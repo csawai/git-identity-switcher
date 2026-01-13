@@ -2,6 +2,10 @@ package keychain
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 
 	"github.com/99designs/keyring"
 )
@@ -54,6 +58,58 @@ func DeleteAllSecrets(identityAlias string) error {
 	for _, key := range keys {
 		DeleteSecret(identityAlias, key) // Ignore errors
 	}
+	return nil
+}
+
+// RemoveGitCredentials removes credentials from git's credential helper
+// This handles both osxkeychain (macOS) and credential store (Linux)
+func RemoveGitCredentials(githubUser string) error {
+	// Try osxkeychain first (macOS)
+	cmd := exec.Command("git", "credential-osxkeychain", "erase")
+	cmd.Stdin = strings.NewReader(fmt.Sprintf("protocol=https\nhost=github.com\nusername=%s\n\n", githubUser))
+	if err := cmd.Run(); err == nil {
+		return nil // Success
+	}
+
+	// Try credential store (Linux/Windows)
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get home directory: %w", err)
+	}
+
+	credStorePath := filepath.Join(homeDir, ".git-credentials")
+	if _, err := os.Stat(credStorePath); os.IsNotExist(err) {
+		return nil // File doesn't exist, nothing to remove
+	}
+
+	data, err := os.ReadFile(credStorePath)
+	if err != nil {
+		return fmt.Errorf("failed to read credential store: %w", err)
+	}
+
+	lines := strings.Split(string(data), "\n")
+	var filteredLines []string
+	pattern := fmt.Sprintf("https://%s@github.com", githubUser)
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line != "" && !strings.Contains(line, pattern) {
+			filteredLines = append(filteredLines, line)
+		}
+	}
+
+	// Also remove generic github.com entries if they match
+	// (Some users might have stored without username)
+	newContent := strings.Join(filteredLines, "\n")
+	if newContent != "" && !strings.HasSuffix(newContent, "\n") {
+		newContent += "\n"
+	}
+
+	// Write back
+	if err := os.WriteFile(credStorePath, []byte(newContent), 0600); err != nil {
+		return fmt.Errorf("failed to write credential store: %w", err)
+	}
+
 	return nil
 }
 

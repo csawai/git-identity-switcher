@@ -58,6 +58,7 @@ func removeIdentity(alias string) error {
 	
 	if identity.AuthMethod == "pat" {
 		fmt.Printf("  • Keychain secrets (PAT)\n")
+		fmt.Printf("  • Git credential helper entries (osxkeychain/credential store)\n")
 	}
 	
 	if identity.SSHKeyPath != "" {
@@ -109,12 +110,22 @@ func removeIdentity(alias string) error {
 		}
 	}
 
-	// Remove keychain secrets
+	// Remove keychain secrets and git credentials
 	if identity.AuthMethod == "pat" {
+		// Remove from gitx keychain
 		if err := keychain.DeleteAllSecrets(alias); err != nil {
 			fmt.Fprintf(os.Stderr, "%sWarning: failed to remove keychain secrets: %v%s\n", colorYellow, err, colorReset)
 		} else {
 			fmt.Printf("%s✓ Keychain secrets removed%s\n", colorGreen, colorReset)
+		}
+		
+		// Remove from git credential helper (osxkeychain, credential store, etc.)
+		if identity.GitHubUser != "" {
+			if err := keychain.RemoveGitCredentials(identity.GitHubUser); err != nil {
+				fmt.Fprintf(os.Stderr, "%sWarning: failed to remove git credentials: %v%s\n", colorYellow, err, colorReset)
+			} else {
+				fmt.Printf("%s✓ Git credentials removed%s\n", colorGreen, colorReset)
+			}
 		}
 	}
 
