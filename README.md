@@ -71,6 +71,8 @@ Follow the prompts to enter:
 - GitHub username
 - Auth method (SSH or PAT)
 
+**For SSH:** After key generation, gitx will display your public key. Add it to GitHub at https://github.com/settings/ssh/new. You can also use `gitx show-key <alias>` or `gitx copy-key <alias>` later.
+
 ### 2. List identities
 
 ```bash
