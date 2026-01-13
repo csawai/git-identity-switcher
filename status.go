@@ -6,9 +6,9 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/csawai/git-identity-switcher/internal/config"
 	"github.com/csawai/git-identity-switcher/internal/ui"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
 
@@ -47,9 +47,6 @@ func showStatus() error {
 			email = "(not set)"
 		}
 	}
-	
-	// Track if email is from local config (for binding detection)
-	emailIsLocal := err == nil
 
 	// Get remote URL
 	remote, err := getRemoteURL()
@@ -59,9 +56,25 @@ func showStatus() error {
 
 	// Check if bound to an identity
 	boundIdentity := ""
-	
-	// Check if remote uses SSH host alias (for SSH auth)
-	if strings.Contains(remote, "@github.com-") {
+
+	// First, check for gitx binding marker (most reliable for both SSH and HTTPS)
+	marker, err := getGitConfigLocal("gitx.bound")
+	if err == nil && marker != "" {
+		// Verify the marker matches a stored identity
+		cfg, err := config.LoadConfig()
+		if err == nil {
+			for _, id := range cfg.Identities {
+				if id.Alias == marker {
+					boundIdentity = marker
+					break
+				}
+			}
+		}
+	}
+
+	// Fallback: Check if remote uses SSH host alias (for SSH auth)
+	// This is the definitive way to detect a bound identity (gitx always sets this for SSH)
+	if boundIdentity == "" && strings.Contains(remote, "@github.com-") {
 		parts := strings.Split(remote, "@")
 		if len(parts) > 1 {
 			hostParts := strings.Split(parts[1], ":")
@@ -69,22 +82,6 @@ func showStatus() error {
 				hostAlias := hostParts[0]
 				if strings.HasPrefix(hostAlias, "github.com-") {
 					boundIdentity = strings.TrimPrefix(hostAlias, "github.com-")
-				}
-			}
-		}
-	}
-	
-	// If not detected via SSH alias, check if email matches a stored identity
-	// BUT only if the email is actually set in local config (not inherited from global)
-	// This ensures we only show "bound" if gitx actually set it
-	if boundIdentity == "" && email != "(not set)" && emailIsLocal {
-		// Email is set locally, check if it matches an identity
-		cfg, err := config.LoadConfig()
-		if err == nil {
-			for _, id := range cfg.Identities {
-				if id.Email == email {
-					boundIdentity = id.Alias
-					break
 				}
 			}
 		}

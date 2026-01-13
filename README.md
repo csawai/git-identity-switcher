@@ -77,13 +77,17 @@ git-identity-switcher can generate SSH keys for you, but you must add the public
 ### From Source
 
 ```bash
-git clone https://github.com/csawai/gitx.git
-cd gitx
-go build -o git-identity-switcher .
-sudo mv git-identity-switcher /usr/local/bin/
+git clone https://github.com/csawai/git-identity-switcher.git
+cd git-identity-switcher
+
+# Using Make (recommended - includes version info)
+make install
+
+# Or manually
+go install .
 ```
 
-### Using Go Install
+### Using Go Install (from GitHub)
 
 ```bash
 go install github.com/csawai/git-identity-switcher@latest
@@ -98,6 +102,8 @@ git-identity-switcher list identities
 ```
 
 **Upgrading:** Run the same `go install` command again to get the latest version.
+
+**Check Version:** Run `git-identity-switcher version` to see the installed version, commit hash, and build date.
 
 ### Using Homebrew (macOS)
 

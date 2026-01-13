@@ -32,10 +32,31 @@ func unbind() error {
 	// Unset user.name if it was set by gitx
 	// For now, we'll just unset it (in future, we could track original values)
 	unsetName := exec.Command("git", "config", "--local", "--unset", "user.name")
-	_ = unsetName.Run() // Ignore error if not set
-	
+	if err := unsetName.Run(); err != nil {
+		// Key might not exist, that's okay
+	}
+
 	unsetEmail := exec.Command("git", "config", "--local", "--unset", "user.email")
-	_ = unsetEmail.Run() // Ignore error if not set
+	if err := unsetEmail.Run(); err != nil {
+		// Key might not exist, that's okay
+	}
+
+	// Verify they're actually unset (double-check)
+	verifyName := exec.Command("git", "config", "--local", "--get", "user.name")
+	if verifyName.Run() == nil {
+		// Still exists, try unset-all to remove all occurrences
+		exec.Command("git", "config", "--local", "--unset-all", "user.name").Run()
+	}
+
+	verifyEmail := exec.Command("git", "config", "--local", "--get", "user.email")
+	if verifyEmail.Run() == nil {
+		// Still exists, try unset-all to remove all occurrences
+		exec.Command("git", "config", "--local", "--unset-all", "user.email").Run()
+	}
+
+	// Remove gitx binding marker
+	unsetMarker := exec.Command("git", "config", "--local", "--unset", "gitx.bound")
+	_ = unsetMarker.Run() // Ignore error if not set
 
 	// Try to revert remote URL to standard github.com format
 	cmd := exec.Command("git", "remote", "get-url", "origin")
@@ -45,10 +66,15 @@ func unbind() error {
 		// If using a host alias, convert back to standard format
 		if strings.Contains(currentURL, "@github.com-") {
 			// Extract org/repo
+			// Format: git@github.com-IDENTITY:org/repo.git
 			parts := strings.Split(currentURL, ":")
 			if len(parts) == 2 {
 				newURL := fmt.Sprintf("git@github.com:%s", parts[1])
-				exec.Command("git", "remote", "set-url", "origin", newURL).Run()
+				setRemoteCmd := exec.Command("git", "remote", "set-url", "origin", newURL)
+				if err := setRemoteCmd.Run(); err != nil {
+					// Log error but don't fail - remote URL revert is best effort
+					fmt.Fprintf(os.Stderr, "Warning: could not revert remote URL: %v\n", err)
+				}
 			}
 		}
 	}
@@ -56,4 +82,3 @@ func unbind() error {
 	fmt.Println(ui.SuccessBox.Render("✅ Repository unbound successfully"))
 	return nil
 }
-

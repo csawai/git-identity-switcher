@@ -69,6 +69,12 @@ func bindIdentity(alias string) error {
 		return fmt.Errorf("failed to set user.email: %w", err)
 	}
 
+	// Set a marker to track that gitx bound this identity
+	// This allows us to reliably detect binding for HTTPS repos
+	if err := setGitConfig("gitx.bound", alias); err != nil {
+		return fmt.Errorf("failed to set gitx.bound marker: %w", err)
+	}
+
 	// Ensure SSH config entry exists for SSH identities
 	if identity.AuthMethod == "ssh" && identity.SSHHostAlias != "" && identity.SSHKeyPath != "" {
 		if err := ssh.AddSSHConfigEntry(identity.SSHHostAlias, identity.SSHKeyPath); err != nil {

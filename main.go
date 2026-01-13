@@ -14,7 +14,11 @@ func showBanner() {
 	fmt.Println()
 }
 
-var version = "0.1.0"
+var (
+	version   = "dev"
+	commit    = "unknown"
+	buildDate = "unknown"
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "gitx",
@@ -33,7 +37,10 @@ var versionCmd = &cobra.Command{
 	Short: "Show gitx version",
 	Run: func(cmd *cobra.Command, args []string) {
 		showBanner()
-		fmt.Println(ui.InfoBox.Render(fmt.Sprintf("Version: %s", version)))
+		versionInfo := fmt.Sprintf(`Version: %s
+Commit:  %s
+Built:   %s`, version, commit, buildDate)
+		fmt.Println(ui.InfoBox.Render(versionInfo))
 	},
 }
 
@@ -56,4 +63,3 @@ func main() {
 		os.Exit(1)
 	}
 }
-
