@@ -49,6 +49,13 @@ func GenerateSSHKey(identityAlias string) (string, error) {
 	return keyPath, nil
 }
 
+// SSHIdentity represents an SSH host alias and key path pair
+type SSHIdentity struct {
+	HostAlias string
+	KeyPath   string
+}
+
+// AddSSHConfigEntry adds or updates an SSH config entry, preserving all existing gitx-managed entries
 func AddSSHConfigEntry(hostAlias, keyPath string) error {
 	configPath, err := GetSSHConfigPath()
 	if err != nil {
@@ -66,11 +73,30 @@ func AddSSHConfigEntry(hostAlias, keyPath string) error {
 		existingContent = string(data)
 	}
 
+	// Parse existing managed entries
+	existingIdentities := parseManagedBlock(existingContent)
+	
+	// Add or update the new identity
+	found := false
+	for i, id := range existingIdentities {
+		if id.HostAlias == hostAlias {
+			existingIdentities[i].KeyPath = keyPath
+			found = true
+			break
+		}
+	}
+	if !found {
+		existingIdentities = append(existingIdentities, SSHIdentity{
+			HostAlias: hostAlias,
+			KeyPath:   keyPath,
+		})
+	}
+
 	// Remove existing managed block
 	existingContent = removeManagedBlock(existingContent)
 
-	// Create new managed block
-	managedBlock := buildManagedBlock(hostAlias, keyPath)
+	// Build new managed block with all identities
+	managedBlock := buildManagedBlockFromIdentities(existingIdentities)
 
 	// Append managed block
 	newContent := existingContent
@@ -109,6 +135,67 @@ func buildManagedBlock(hostAlias, keyPath string) string {
 	block += fmt.Sprintf("  IdentitiesOnly yes\n")
 	block += fmt.Sprintf("%s\n", SSHConfigMarkerEnd)
 	return block
+}
+
+func buildManagedBlockFromIdentities(identities []SSHIdentity) string {
+	block := fmt.Sprintf("%s\n", SSHConfigMarkerBegin)
+	for _, id := range identities {
+		block += fmt.Sprintf("Host %s\n", id.HostAlias)
+		block += fmt.Sprintf("  HostName github.com\n")
+		block += fmt.Sprintf("  User git\n")
+		block += fmt.Sprintf("  IdentityFile %s\n", id.KeyPath)
+		block += fmt.Sprintf("  IdentitiesOnly yes\n")
+		block += "\n"
+	}
+	block += fmt.Sprintf("%s\n", SSHConfigMarkerEnd)
+	return block
+}
+
+func parseManagedBlock(content string) []SSHIdentity {
+	var identities []SSHIdentity
+	lines := strings.Split(content, "\n")
+	inManagedBlock := false
+	var currentHost string
+	var currentKeyPath string
+
+	for i, line := range lines {
+		if strings.Contains(line, SSHConfigMarkerBegin) {
+			inManagedBlock = true
+			continue
+		}
+		if strings.Contains(line, SSHConfigMarkerEnd) {
+			// Save last identity if any
+			if currentHost != "" && currentKeyPath != "" {
+				identities = append(identities, SSHIdentity{
+					HostAlias: currentHost,
+					KeyPath:   currentKeyPath,
+				})
+			}
+			inManagedBlock = false
+			currentHost = ""
+			currentKeyPath = ""
+			continue
+		}
+		if inManagedBlock {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "Host ") {
+				// Save previous identity if any
+				if currentHost != "" && currentKeyPath != "" {
+					identities = append(identities, SSHIdentity{
+						HostAlias: currentHost,
+						KeyPath:   currentKeyPath,
+					})
+				}
+				currentHost = strings.TrimPrefix(line, "Host ")
+				currentKeyPath = ""
+			} else if strings.HasPrefix(line, "IdentityFile ") {
+				currentKeyPath = strings.TrimPrefix(line, "IdentityFile ")
+			}
+		}
+		_ = i // avoid unused variable
+	}
+
+	return identities
 }
 
 func removeManagedBlock(content string) string {
@@ -160,12 +247,39 @@ func RemoveSSHConfigEntry(hostAlias string) error {
 		return err
 	}
 
+	// Parse existing managed entries
+	existingIdentities := parseManagedBlock(string(data))
+	
+	// Remove the specified host alias
+	filteredIdentities := []SSHIdentity{}
+	for _, id := range existingIdentities {
+		if id.HostAlias != hostAlias {
+			filteredIdentities = append(filteredIdentities, id)
+		}
+	}
+
+	// Remove existing managed block
 	content := removeManagedBlock(string(data))
+
+	// If there are remaining identities, rebuild the managed block
+	if len(filteredIdentities) > 0 {
+		managedBlock := buildManagedBlockFromIdentities(filteredIdentities)
+		if !strings.HasSuffix(content, "\n") && content != "" {
+			content += "\n"
+		}
+		content += managedBlock + "\n"
+	}
 
 	// Write to temp file first
 	tempPath := configPath + ".tmp"
 	if err := os.WriteFile(tempPath, []byte(content), 0600); err != nil {
 		return fmt.Errorf("failed to write temp config: %w", err)
+	}
+
+	// Validate SSH config
+	if err := validateSSHConfig(tempPath); err != nil {
+		os.Remove(tempPath)
+		return fmt.Errorf("invalid SSH config: %w", err)
 	}
 
 	// Atomic swap

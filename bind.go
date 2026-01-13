@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/csawai/git-identity-switcher/internal/config"
+	"github.com/csawai/git-identity-switcher/internal/ssh"
 	"github.com/spf13/cobra"
 )
 
@@ -65,6 +66,13 @@ func bindIdentity(alias string) error {
 	// Set user.email
 	if err := setGitConfig("user.email", identity.Email); err != nil {
 		return fmt.Errorf("failed to set user.email: %w", err)
+	}
+
+	// Ensure SSH config entry exists for SSH identities
+	if identity.AuthMethod == "ssh" && identity.SSHHostAlias != "" && identity.SSHKeyPath != "" {
+		if err := ssh.AddSSHConfigEntry(identity.SSHHostAlias, identity.SSHKeyPath); err != nil {
+			return fmt.Errorf("failed to update SSH config: %w", err)
+		}
 	}
 
 	// Update remote URL based on auth method
