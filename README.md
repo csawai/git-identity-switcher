@@ -56,6 +56,12 @@ Working with multiple GitHub accounts (work, personal, client) is a pain. You've
 
 **git-identity-switcher solves all of this** by binding identities to repositories, so you never have to think about it again.
 
+## 🎬 Demo
+
+[![git-identity-switcher Demo](https://img.youtube.com/vi/pKojQpKPEUw/maxresdefault.jpg)](https://youtu.be/pKojQpKPEUw)
+
+Watch the [10-second demo](https://youtu.be/pKojQpKPEUw) to see git-identity-switcher in action.
+
 ## 📋 What git-identity-switcher Does (and Doesn't)
 
 **✅ What git-identity-switcher manages:**
@@ -83,7 +89,7 @@ cd git-identity-switcher
 # Using Make (recommended - includes version info)
 make install
 
-# Or manually
+# Or manually (version will show "dev" without Make)
 go install .
 ```
 
