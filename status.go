@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/csawai/git-identity-switcher/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -45,8 +46,10 @@ func showStatus() error {
 		remote = "(not set)"
 	}
 
-	// Check if bound to an identity (by checking if remote uses host alias)
+	// Check if bound to an identity
 	boundIdentity := ""
+	
+	// Check if remote uses SSH host alias (for SSH auth)
 	if strings.Contains(remote, "@github.com-") {
 		parts := strings.Split(remote, "@")
 		if len(parts) > 1 {
@@ -55,6 +58,20 @@ func showStatus() error {
 				hostAlias := hostParts[0]
 				if strings.HasPrefix(hostAlias, "github.com-") {
 					boundIdentity = strings.TrimPrefix(hostAlias, "github.com-")
+				}
+			}
+		}
+	}
+	
+	// If not detected via SSH alias, check if email matches a stored identity
+	// (email is the key identifier, name might vary)
+	if boundIdentity == "" && email != "(not set)" {
+		cfg, err := config.LoadConfig()
+		if err == nil {
+			for _, id := range cfg.Identities {
+				if id.Email == email {
+					boundIdentity = id.Alias
+					break
 				}
 			}
 		}
