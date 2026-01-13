@@ -6,7 +6,7 @@ Manage multiple GitHub identities safely with per-repo binding. Never push to th
 
 **Note:** The command is `git-identity-switcher`. Create an alias: `alias gitx='git-identity-switcher'` (see Installation section).
 
-## ⚡ 10-Second Demo
+## ⚡ Demo
 
 ```bash
 # List your identities
