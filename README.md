@@ -1,6 +1,24 @@
 # gitx 🚀
 
-> **Git Identity Switcher** - Manage multiple GitHub identities safely with per-repo binding. Never push to the wrong account again.
+> **Stop committing as the wrong person.**
+
+Manage multiple GitHub identities safely with per-repo binding. Never push to the wrong account again.
+
+## ⚡ 10-Second Demo
+
+```bash
+# List your identities
+gitx list identities
+
+# Bind a repo to an identity
+gitx bind work
+
+# Verify it worked
+git config user.email
+# → work@company.com ✅
+```
+
+That's it. Each repo uses the right identity automatically.
 
 [![Go Version](https://img.shields.io/badge/go-1.21+-00ADD8?style=flat-square&logo=go)](https://golang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
@@ -28,6 +46,22 @@ Working with multiple GitHub accounts (work, personal, client) is a pain. You've
 - ❌ Manual identity switching
 
 **gitx solves all of this** by binding identities to repositories, so you never have to think about it again.
+
+## 📋 What gitx Does (and Doesn't)
+
+**✅ What gitx manages:**
+- **Local repo identity** - Sets `user.name` and `user.email` per repository
+- **Remote URL configuration** - Updates remotes to use correct SSH/HTTPS auth
+- **SSH key management** - Generates and configures SSH keys per identity (optional)
+- **PAT storage** - Securely stores Personal Access Tokens in OS keychain (optional)
+
+**❌ What gitx does NOT touch:**
+- **Global git config** - Your `~/.gitconfig` remains untouched
+- **Existing SSH keys** - Only manages keys it generates (`gitx_*`), never touches your existing keys
+- **GitHub account settings** - You still need to add SSH keys to GitHub manually
+
+**🔑 SSH Keys Note:**
+gitx can generate SSH keys for you, but you must add the public key to GitHub yourself. The tool will show you the key and provide instructions.
 
 ## 📦 Installation
 
