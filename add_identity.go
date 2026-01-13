@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/csawai/git-identity-switcher/internal/config"
@@ -87,7 +88,7 @@ func addIdentity() error {
 		return nil
 	}
 
-	// Handle SSH key generation
+		// Handle SSH key generation
 	if authMethod == "ssh" {
 		fmt.Print("Generate SSH key? (y/n) [y]: ")
 		generate, _ := reader.ReadString('\n')
@@ -115,6 +116,9 @@ func addIdentity() error {
 			}
 			fmt.Printf("✓ SSH key generated: %s\n", keyPath)
 			fmt.Printf("✓ SSH config updated\n")
+
+			// Show public key and instructions
+			showSSHKeyInstructions(alias, keyPath)
 		}
 	} else if authMethod == "pat" {
 		fmt.Print("Personal Access Token: ")
@@ -137,4 +141,75 @@ func addIdentity() error {
 
 	fmt.Printf("✓ Identity '%s' added successfully\n", alias)
 	return nil
+}
+
+func showSSHKeyInstructions(alias, keyPath string) {
+	pubKeyPath := keyPath + ".pub"
+	pubKey, err := os.ReadFile(pubKeyPath)
+	if err != nil {
+		fmt.Printf("⚠ Could not read public key: %v\n", err)
+		return
+	}
+
+	fmt.Println()
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Printf("Add this SSH key to your GitHub account:\n")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Print(string(pubKey))
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println()
+	fmt.Println("Next steps:")
+	fmt.Println("  1. Copy the key above")
+	fmt.Println("  2. Go to: https://github.com/settings/ssh/new")
+	fmt.Println("  3. Paste and click 'Add SSH key'")
+	fmt.Println()
+	fmt.Printf("Or run: gitx copy-key %s\n", alias)
+	fmt.Println()
+
+	// Offer to copy to clipboard
+	fmt.Print("Copy to clipboard now? (y/n) [y]: ")
+	reader := bufio.NewReader(os.Stdin)
+	response, _ := reader.ReadString('\n')
+	response = strings.TrimSpace(strings.ToLower(response))
+	if response == "" || response == "y" {
+		if err := copyToClipboard(pubKey); err != nil {
+			fmt.Printf("⚠ Could not copy to clipboard: %v\n", err)
+			fmt.Println("   (You can still copy manually)")
+		} else {
+			fmt.Println("✓ Copied to clipboard!")
+		}
+	}
+}
+
+func copyToClipboard(data []byte) error {
+	var copyCmd *exec.Cmd
+	if _, err := exec.LookPath("pbcopy"); err == nil {
+		// macOS
+		copyCmd = exec.Command("pbcopy")
+	} else if _, err := exec.LookPath("xclip"); err == nil {
+		// Linux with xclip
+		copyCmd = exec.Command("xclip", "-selection", "clipboard")
+	} else if _, err := exec.LookPath("xsel"); err == nil {
+		// Linux with xsel
+		copyCmd = exec.Command("xsel", "--clipboard", "--input")
+	} else {
+		return fmt.Errorf("no clipboard utility found")
+	}
+
+	stdin, err := copyCmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	if err := copyCmd.Start(); err != nil {
+		return err
+	}
+
+	if _, err := stdin.Write(data); err != nil {
+		stdin.Close()
+		return err
+	}
+	stdin.Close()
+
+	return copyCmd.Wait()
 }

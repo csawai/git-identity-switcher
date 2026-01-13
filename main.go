@@ -32,6 +32,7 @@ func init() {
 	rootCmd.AddCommand(bindCmd)
 	rootCmd.AddCommand(unbindCmd)
 	rootCmd.AddCommand(removeIdentityCmd)
+	// show_key.go registers showKeyCmd and copyKeyCmd
 }
 
 func main() {
