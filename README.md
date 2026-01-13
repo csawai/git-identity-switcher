@@ -112,6 +112,8 @@ Reverts gitx changes to the repository.
 | `gitx status` | Show current repository identity status |
 | `gitx add identity` | Add a new identity |
 | `gitx list identities` | List all configured identities |
+| `gitx show-key <alias>` | Show SSH public key for an identity |
+| `gitx copy-key <alias>` | Copy SSH public key to clipboard |
 | `gitx bind <alias>` | Bind repository to an identity |
 | `gitx unbind` | Unbind repository from identity |
 | `gitx remove identity <alias>` | Remove an identity |
