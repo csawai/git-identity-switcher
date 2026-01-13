@@ -4,14 +4,17 @@
 
 Manage multiple GitHub identities safely with per-repo binding. Never push to the wrong account again.
 
+**Note:** The command is `git-identity-switcher`. Create an alias: `alias gitx='git-identity-switcher'` (see Installation section).
+
 ## ⚡ 10-Second Demo
 
 ```bash
 # List your identities
-gitx list identities
+git-identity-switcher list identities
+# (or use alias: gitx list identities)
 
 # Bind a repo to an identity
-gitx bind work
+git-identity-switcher bind work
 
 # Verify it worked
 git config user.email
@@ -19,6 +22,12 @@ git config user.email
 ```
 
 That's it. Each repo uses the right identity automatically.
+
+**Note:** The binary is named `git-identity-switcher`. Create an alias for convenience:
+```bash
+echo "alias gitx='git-identity-switcher'" >> ~/.zshrc  # or ~/.bashrc
+source ~/.zshrc
+```
 
 [![Go Version](https://img.shields.io/badge/go-1.21+-00ADD8?style=flat-square&logo=go)](https://golang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
@@ -45,23 +54,23 @@ Working with multiple GitHub accounts (work, personal, client) is a pain. You've
 - ❌ SSH config conflicts
 - ❌ Manual identity switching
 
-**gitx solves all of this** by binding identities to repositories, so you never have to think about it again.
+**git-identity-switcher solves all of this** by binding identities to repositories, so you never have to think about it again.
 
-## 📋 What gitx Does (and Doesn't)
+## 📋 What git-identity-switcher Does (and Doesn't)
 
-**✅ What gitx manages:**
+**✅ What git-identity-switcher manages:**
 - **Local repo identity** - Sets `user.name` and `user.email` per repository
 - **Remote URL configuration** - Updates remotes to use correct SSH/HTTPS auth
 - **SSH key management** - Generates and configures SSH keys per identity (optional)
 - **PAT storage** - Securely stores Personal Access Tokens in OS keychain (optional)
 
-**❌ What gitx does NOT touch:**
+**❌ What git-identity-switcher does NOT touch:**
 - **Global git config** - Your `~/.gitconfig` remains untouched
 - **Existing SSH keys** - Only manages keys it generates (`gitx_*`), never touches your existing keys
 - **GitHub account settings** - You still need to add SSH keys to GitHub manually
 
 **🔑 SSH Keys Note:**
-gitx can generate SSH keys for you, but you must add the public key to GitHub yourself. The tool will show you the key and provide instructions.
+git-identity-switcher can generate SSH keys for you, but you must add the public key to GitHub yourself. The tool will show you the key and provide instructions.
 
 ## 📦 Installation
 
@@ -70,8 +79,8 @@ gitx can generate SSH keys for you, but you must add the public key to GitHub yo
 ```bash
 git clone https://github.com/csawai/gitx.git
 cd gitx
-go build -o gitx .
-sudo mv gitx /usr/local/bin/
+go build -o git-identity-switcher .
+sudo mv git-identity-switcher /usr/local/bin/
 ```
 
 ### Using Go Install
@@ -80,8 +89,12 @@ sudo mv gitx /usr/local/bin/
 go install github.com/csawai/git-identity-switcher@latest
 
 # The binary will be named 'git-identity-switcher'
-# Create an alias for convenience:
-alias gitx='git-identity-switcher'
+# Create an alias for convenience (add to ~/.zshrc or ~/.bashrc):
+echo "alias gitx='git-identity-switcher'" >> ~/.zshrc
+source ~/.zshrc
+
+# Now you can use 'gitx' instead of 'git-identity-switcher'
+git-identity-switcher list identities
 ```
 
 **Upgrading:** Run the same `go install` command again to get the latest version.
@@ -97,7 +110,8 @@ brew install csawai/tap/gitx
 ### 1. Add an identity
 
 ```bash
-gitx add identity
+git-identity-switcher add identity
+# or: git-identity-switcher add identity (if you created the alias)
 ```
 
 Follow the prompts to enter:
@@ -107,19 +121,19 @@ Follow the prompts to enter:
 - GitHub username
 - Auth method (SSH or PAT)
 
-**For SSH:** After key generation, gitx will display your public key. Add it to GitHub at https://github.com/settings/ssh/new. You can also use `gitx show-key <alias>` or `gitx copy-key <alias>` later.
+**For SSH:** After key generation, git-identity-switcher will display your public key. Add it to GitHub at https://github.com/settings/ssh/new. You can also use `git-identity-switcher show-key <alias>` or `git-identity-switcher copy-key <alias>` later.
 
 ### 2. List identities
 
 ```bash
-gitx list identities
+git-identity-switcher list identities
 ```
 
 ### 3. Bind a repository
 
 ```bash
 cd /path/to/repo
-gitx bind work
+git-identity-switcher bind work
 ```
 
 This automatically:
@@ -129,7 +143,7 @@ This automatically:
 ### 4. Check status
 
 ```bash
-gitx status
+git-identity-switcher status
 ```
 
 Shows current identity configuration for the repository.
@@ -137,27 +151,27 @@ Shows current identity configuration for the repository.
 ### 5. Unbind a repository
 
 ```bash
-gitx unbind
+git-identity-switcher unbind
 ```
 
-Reverts gitx changes to the repository.
+Reverts git-identity-switcher changes to the repository.
 
 ## 📖 Commands
 
 | Command | Description |
 |---------|-------------|
-| `gitx version` | Show version |
-| `gitx status` | Show current repository identity status |
-| `gitx add identity` | Add a new identity |
-| `gitx list identities` | List all configured identities |
-| `gitx show-key <alias>` | Show SSH public key for an identity |
-| `gitx copy-key <alias>` | Copy SSH public key to clipboard |
-| `gitx bind <alias>` | Bind repository to an identity |
-| `gitx unbind` | Unbind repository from identity |
-| `gitx remove identity <alias>` | Remove an identity |
-| `gitx tui` | Launch interactive TUI |
-| `gitx install-hook` | Install pre-push safety hook |
-| `gitx uninstall-hook` | Remove pre-push hook |
+| `git-identity-switcher version` | Show version |
+| `git-identity-switcher status` | Show current repository identity status |
+| `git-identity-switcher add identity` | Add a new identity |
+| `git-identity-switcher list identities` | List all configured identities |
+| `git-identity-switcher show-key <alias>` | Show SSH public key for an identity |
+| `git-identity-switcher copy-key <alias>` | Copy SSH public key to clipboard |
+| `git-identity-switcher bind <alias>` | Bind repository to an identity |
+| `git-identity-switcher unbind` | Unbind repository from identity |
+| `git-identity-switcher remove identity <alias>` | Remove an identity |
+| `git-identity-switcher tui` | Launch interactive TUI |
+| `git-identity-switcher install-hook` | Install pre-push safety hook |
+| `git-identity-switcher uninstall-hook` | Remove pre-push hook |
 
 ## 🔧 How It Works
 
@@ -179,13 +193,13 @@ Reverts gitx changes to the repository.
 All gitx-managed entries are in a marked block:
 
 ```
-# BEGIN gitx managed
+# BEGIN git-identity-switcher managed
 Host github.com-work
   HostName github.com
   User git
   IdentityFile ~/.ssh/gitx_work
   IdentitiesOnly yes
-# END gitx managed
+# END git-identity-switcher managed
 ```
 
 - Automatic backups are created before any changes
@@ -211,7 +225,7 @@ Host github.com-work
 
 ```bash
 # Add your work identity
-gitx add identity
+git-identity-switcher add identity
 # Alias: work
 # Name: John Doe
 # Email: john@company.com
@@ -219,7 +233,7 @@ gitx add identity
 # Auth: ssh
 
 # Add your personal identity
-gitx add identity
+git-identity-switcher add identity
 # Alias: personal
 # Name: John Doe
 # Email: john@gmail.com
@@ -228,21 +242,21 @@ gitx add identity
 
 # Bind work repo
 cd ~/projects/work-project
-gitx bind work
+git-identity-switcher bind work
 
 # Bind personal repo
 cd ~/projects/personal-project
-gitx bind personal
+git-identity-switcher bind personal
 
 # Check status
-gitx status
+git-identity-switcher status
 ```
 
 ### Using TUI
 
 ```bash
 cd ~/projects/my-repo
-gitx tui
+git-identity-switcher tui
 # Interactive menu to select and bind identity
 ```
 
@@ -268,7 +282,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 git clone https://github.com/csawai/gitx.git
 cd gitx
 go mod download
-go build -o gitx .
+go build -o git-identity-switcher .
 ```
 
 ## 📋 Requirements
