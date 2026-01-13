@@ -1,4 +1,4 @@
-module github.com/csawai/gitx
+module github.com/csawai/git-identity-switcher
 
 go 1.21
 

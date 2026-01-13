@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/csawai/gitx/internal/config"
-	"github.com/csawai/gitx/internal/keychain"
-	"github.com/csawai/gitx/internal/ssh"
+	"github.com/csawai/git-identity-switcher/internal/config"
+	"github.com/csawai/git-identity-switcher/internal/keychain"
+	"github.com/csawai/git-identity-switcher/internal/ssh"
 	"github.com/spf13/cobra"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/csawai/gitx/internal/config"
+	"github.com/csawai/git-identity-switcher/internal/config"
 	"github.com/spf13/cobra"
 )
 
