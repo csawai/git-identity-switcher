@@ -43,7 +43,11 @@ sudo mv gitx /usr/local/bin/
 ### Using Go Install
 
 ```bash
-go install github.com/csawai/gitx@latest
+go install github.com/csawai/git-identity-switcher@latest
+
+# The binary will be named 'git-identity-switcher'
+# Create an alias for convenience:
+alias gitx='git-identity-switcher'
 ```
 
 ### Using Homebrew (macOS)
