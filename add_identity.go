@@ -139,7 +139,16 @@ func addIdentity() error {
 		return err
 	}
 
-	fmt.Printf("✓ Identity '%s' added successfully\n", alias)
+	fmt.Printf("\n✓ Identity '%s' added successfully\n", alias)
+	
+	// Remind user about SSH key if they use SSH
+	if identity.AuthMethod == "ssh" && identity.SSHKeyPath != "" {
+		fmt.Println()
+		fmt.Println("💡 Need your SSH key again?")
+		fmt.Printf("   Run: gitx show-key %s\n", alias)
+		fmt.Printf("   Or:  gitx copy-key %s\n", alias)
+	}
+	
 	return nil
 }
 
@@ -152,18 +161,20 @@ func showSSHKeyInstructions(alias, keyPath string) {
 	}
 
 	fmt.Println()
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Printf("Add this SSH key to your GitHub account:\n")
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("⚠️  IMPORTANT: Add this PUBLIC key to your GitHub account")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println()
 	fmt.Print(string(pubKey))
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println()
-	fmt.Println("Next steps:")
-	fmt.Println("  1. Copy the key above")
-	fmt.Println("  2. Go to: https://github.com/settings/ssh/new")
-	fmt.Println("  3. Paste and click 'Add SSH key'")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println()
-	fmt.Printf("Or run: gitx copy-key %s\n", alias)
+	fmt.Println("📋 Next steps:")
+	fmt.Println("   1. Copy the PUBLIC key above (starts with 'ssh-ed25519' or 'ssh-rsa')")
+	fmt.Println("   2. Go to: https://github.com/settings/ssh/new")
+	fmt.Println("   3. Paste and click 'Add SSH key'")
+	fmt.Println()
+	fmt.Println("💡 Tip: Run 'gitx copy-key " + alias + "' to copy this key anytime")
 	fmt.Println()
 
 	// Offer to copy to clipboard
