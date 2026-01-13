@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/csawai/git-identity-switcher/internal/config"
@@ -139,18 +140,30 @@ func addIdentity() error {
 		return err
 	}
 
-	fmt.Printf("\n✓ Identity '%s' added successfully\n", alias)
+	fmt.Printf("\n%s✓ Identity '%s' added successfully%s\n", colorGreen, alias, colorReset)
 	
 	// Remind user about SSH key if they use SSH
 	if identity.AuthMethod == "ssh" && identity.SSHKeyPath != "" {
 		fmt.Println()
-		fmt.Println("💡 Need your SSH key again?")
-		fmt.Printf("   Run: gitx show-key %s\n", alias)
-		fmt.Printf("   Or:  gitx copy-key %s\n", alias)
+		fmt.Printf("%s%s⚠️  REMINDER: Add your SSH key to GitHub if you haven't already!%s\n", colorBold, colorRed, colorReset)
+		fmt.Printf("   Key location: %s\n", identity.SSHKeyPath+".pub")
+		fmt.Printf("   Show key: %sgitx show-key %s%s\n", colorBold, alias, colorReset)
+		fmt.Printf("   Copy key: %sgitx copy-key %s%s\n", colorBold, alias, colorReset)
+		fmt.Printf("   GitHub: %shttps://github.com/settings/ssh/new%s\n", colorCyan, colorReset)
 	}
 	
 	return nil
 }
+
+// ANSI color codes
+const (
+	colorReset  = "\033[0m"
+	colorRed    = "\033[31m"
+	colorYellow = "\033[33m"
+	colorGreen  = "\033[32m"
+	colorCyan   = "\033[36m"
+	colorBold   = "\033[1m"
+)
 
 func showSSHKeyInstructions(alias, keyPath string) {
 	pubKeyPath := keyPath + ".pub"
@@ -160,21 +173,27 @@ func showSSHKeyInstructions(alias, keyPath string) {
 		return
 	}
 
+	// Get absolute path for display
+	absPath, _ := filepath.Abs(pubKeyPath)
+
 	fmt.Println()
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Println("⚠️  IMPORTANT: Add this PUBLIC key to your GitHub account")
+	fmt.Printf("%s%s⚠️  CRITICAL: You MUST add this PUBLIC key to your GitHub account%s\n", colorBold, colorRed, colorReset)
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println()
+	fmt.Printf("%sPublic Key Location: %s%s\n", colorCyan, absPath, colorReset)
 	fmt.Println()
 	fmt.Print(string(pubKey))
 	fmt.Println()
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println()
-	fmt.Println("📋 Next steps:")
+	fmt.Printf("%s%s📋 REQUIRED ACTION:%s\n", colorBold, colorRed, colorReset)
 	fmt.Println("   1. Copy the PUBLIC key above (starts with 'ssh-ed25519' or 'ssh-rsa')")
-	fmt.Println("   2. Go to: https://github.com/settings/ssh/new")
+	fmt.Printf("   2. Go to: %shttps://github.com/settings/ssh/new%s\n", colorCyan, colorReset)
 	fmt.Println("   3. Paste and click 'Add SSH key'")
 	fmt.Println()
-	fmt.Println("💡 Tip: Run 'gitx copy-key " + alias + "' to copy this key anytime")
+	fmt.Printf("%s💡 Need this key again? Run: %sgitx show-key %s%s\n", colorYellow, colorBold, alias, colorReset)
+	fmt.Printf("%s💡 Or copy it: %sgitx copy-key %s%s\n", colorYellow, colorBold, alias, colorReset)
 	fmt.Println()
 
 	// Offer to copy to clipboard
@@ -184,10 +203,10 @@ func showSSHKeyInstructions(alias, keyPath string) {
 	response = strings.TrimSpace(strings.ToLower(response))
 	if response == "" || response == "y" {
 		if err := copyToClipboard(pubKey); err != nil {
-			fmt.Printf("⚠ Could not copy to clipboard: %v\n", err)
+			fmt.Printf("%s⚠ Could not copy to clipboard: %v%s\n", colorYellow, err, colorReset)
 			fmt.Println("   (You can still copy manually)")
 		} else {
-			fmt.Println("✓ Copied to clipboard!")
+			fmt.Printf("%s✓ Copied to clipboard!%s\n", colorGreen, colorReset)
 		}
 	}
 }
