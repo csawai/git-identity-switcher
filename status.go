@@ -66,14 +66,20 @@ func showStatus() error {
 	}
 	
 	// If not detected via SSH alias, check if email matches a stored identity
-	// (email is the key identifier, name might vary)
+	// BUT only if the email is actually set in local config (not inherited from global)
+	// This ensures we only show "bound" if gitx actually set it
 	if boundIdentity == "" && email != "(not set)" {
-		cfg, err := config.LoadConfig()
-		if err == nil {
-			for _, id := range cfg.Identities {
-				if id.Email == email {
-					boundIdentity = id.Alias
-					break
+		// Check if email is set in local config (not global)
+		localEmail, err := exec.Command("git", "config", "--local", "--get", "user.email").Output()
+		if err == nil && strings.TrimSpace(string(localEmail)) == email {
+			// Email is set locally, check if it matches an identity
+			cfg, err := config.LoadConfig()
+			if err == nil {
+				for _, id := range cfg.Identities {
+					if id.Email == email {
+						boundIdentity = id.Alias
+						break
+					}
 				}
 			}
 		}

@@ -31,8 +31,11 @@ func unbind() error {
 
 	// Unset user.name if it was set by gitx
 	// For now, we'll just unset it (in future, we could track original values)
-	exec.Command("git", "config", "--local", "--unset", "user.name").Run()
-	exec.Command("git", "config", "--local", "--unset", "user.email").Run()
+	unsetName := exec.Command("git", "config", "--local", "--unset", "user.name")
+	_ = unsetName.Run() // Ignore error if not set
+	
+	unsetEmail := exec.Command("git", "config", "--local", "--unset", "user.email")
+	_ = unsetEmail.Run() // Ignore error if not set
 
 	// Try to revert remote URL to standard github.com format
 	cmd := exec.Command("git", "remote", "get-url", "origin")
