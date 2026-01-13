@@ -50,7 +50,9 @@ func init() {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		// Use styled error box
+		errorMsg := ui.ErrorBox.Render(fmt.Sprintf("❌ Error: %v", err))
+		fmt.Fprintf(os.Stderr, "%s\n", errorMsg)
 		os.Exit(1)
 	}
 }

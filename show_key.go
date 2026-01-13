@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/csawai/git-identity-switcher/internal/config"
+	"github.com/csawai/git-identity-switcher/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -60,16 +62,13 @@ func showKey(alias string) error {
 		return fmt.Errorf("failed to read public key: %w", err)
 	}
 
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Printf("SSH Public Key for '%s':\n", alias)
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Print(string(pubKey))
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Println()
-	fmt.Println("Add this key to your GitHub account:")
-	fmt.Println("  https://github.com/settings/ssh/new")
-	fmt.Println()
-	fmt.Println("Or copy it with: gitx copy-key", alias)
+	content := fmt.Sprintf("🔑 Public SSH Key for '%s'\n\n", alias)
+	content += ui.InfoText.Render(strings.TrimSpace(string(pubKey))) + "\n\n"
+	content += ui.MutedText.Render("Add this key to your GitHub account at:")
+	content += "\n" + ui.InfoText.Render("https://github.com/settings/ssh/new")
+	content += "\n\n" + ui.MutedText.Render("Or copy it with: gitx copy-key " + alias)
+	
+	fmt.Println(ui.InfoBox.Render(content))
 
 	return nil
 }
@@ -128,8 +127,7 @@ func copyKey(alias string) error {
 		return fmt.Errorf("failed to copy to clipboard: %w", err)
 	}
 
-	fmt.Printf("✓ SSH public key for '%s' copied to clipboard\n", alias)
-	fmt.Println("Paste it at: https://github.com/settings/ssh/new")
+	fmt.Println(ui.SuccessBox.Render(fmt.Sprintf("✅ SSH public key for '%s' copied to clipboard!\n\n%s", alias, ui.InfoText.Render("Paste it at: https://github.com/settings/ssh/new"))))
 
 	return nil
 }

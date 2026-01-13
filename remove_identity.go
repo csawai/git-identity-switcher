@@ -45,31 +45,32 @@ func removeIdentity(alias string) error {
 		return err
 	}
 
-	// Show what will be deleted
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Printf("Removing identity: %s\n", alias)
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Println()
-	fmt.Println("This will remove:")
-	fmt.Printf("  • Identity config entry\n")
+	// Show what will be deleted in a styled box
+	var items []string
+	items = append(items, "• Identity config entry")
 	
 	if identity.SSHHostAlias != "" {
-		fmt.Printf("  • SSH config entry: %s\n", identity.SSHHostAlias)
+		items = append(items, fmt.Sprintf("• SSH config entry: %s", identity.SSHHostAlias))
 	}
 	
 	if identity.AuthMethod == "pat" {
-		fmt.Printf("  • Keychain secrets (PAT)\n")
-		fmt.Printf("  • Git credential helper entries (osxkeychain/credential store)\n")
+		items = append(items, "• Keychain secrets (PAT)")
+		items = append(items, "• Git credential helper entries")
 	}
 	
 	if identity.SSHKeyPath != "" {
-		fmt.Printf("  • SSH key files: %s, %s.pub\n", identity.SSHKeyPath, identity.SSHKeyPath)
+		items = append(items, fmt.Sprintf("• SSH key files: %s, %s.pub", identity.SSHKeyPath, identity.SSHKeyPath))
 	}
-	fmt.Println()
 
-	// Check for potential bound repositories (by email)
-	fmt.Printf("%s⚠️  Warning:%s If any repositories are bound to this identity (email: %s),\n", colorBold, colorReset, identity.Email)
-	fmt.Println("   you may need to rebind them to another identity.")
+	content := fmt.Sprintf("🗑️  Removing identity: %s\n\n", ui.ErrorText.Render(alias))
+	content += "This will remove:\n"
+	for _, item := range items {
+		content += "  " + item + "\n"
+	}
+	content += "\n" + ui.WarningText.Render("⚠️  Warning:") + " If any repositories are bound to this identity\n"
+	content += fmt.Sprintf("   (email: %s), you may need to rebind them.", identity.Email)
+
+	fmt.Println(ui.WarningBox.Render(content))
 	fmt.Println()
 
 	// Dry-run mode
@@ -102,30 +103,30 @@ func removeIdentity(alias string) error {
 		}
 	}
 
-	// Remove SSH config entry
+		// Remove SSH config entry
 	if identity.SSHHostAlias != "" {
-		if err := ssh.RemoveSSHConfigEntry(identity.SSHHostAlias); err != nil {
-			fmt.Fprintf(os.Stderr, "%sWarning: failed to remove SSH config entry: %v%s\n", colorYellow, err, colorReset)
-		} else {
-			fmt.Printf("%s✓ SSH config entry removed%s\n", colorGreen, colorReset)
+		if err := ui.SpinnerWithFunc("Removing SSH config entry", func() error {
+			return ssh.RemoveSSHConfigEntry(identity.SSHHostAlias)
+		}); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", ui.WarningText.Render("⚠️  Warning: failed to remove SSH config entry: "+err.Error()))
 		}
 	}
 
 	// Remove keychain secrets and git credentials
 	if identity.AuthMethod == "pat" {
 		// Remove from gitx keychain
-		if err := keychain.DeleteAllSecrets(alias); err != nil {
-			fmt.Fprintf(os.Stderr, "%sWarning: failed to remove keychain secrets: %v%s\n", colorYellow, err, colorReset)
-		} else {
-			fmt.Printf("%s✓ Keychain secrets removed%s\n", colorGreen, colorReset)
+		if err := ui.SpinnerWithFunc("Removing keychain secrets", func() error {
+			return keychain.DeleteAllSecrets(alias)
+		}); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", ui.WarningText.Render("⚠️  Warning: failed to remove keychain secrets: "+err.Error()))
 		}
 		
 		// Remove from git credential helper (osxkeychain, credential store, etc.)
 		if identity.GitHubUser != "" {
-			if err := keychain.RemoveGitCredentials(identity.GitHubUser); err != nil {
-				fmt.Fprintf(os.Stderr, "%sWarning: failed to remove git credentials: %v%s\n", colorYellow, err, colorReset)
-			} else {
-				fmt.Printf("%s✓ Git credentials removed%s\n", colorGreen, colorReset)
+			if err := ui.SpinnerWithFunc("Removing git credentials", func() error {
+				return keychain.RemoveGitCredentials(identity.GitHubUser)
+			}); err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", ui.WarningText.Render("⚠️  Warning: failed to remove git credentials: "+err.Error()))
 			}
 		}
 	}

@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/csawai/git-identity-switcher/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -49,7 +50,7 @@ func unbind() error {
 		}
 	}
 
-	fmt.Println("✓ Repository unbound")
+	fmt.Println(ui.SuccessBox.Render("✅ Repository unbound successfully"))
 	return nil
 }
 

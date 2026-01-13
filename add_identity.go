@@ -36,28 +36,32 @@ var addIdentityCmd = &cobra.Command{
 func addIdentity() error {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Print("Identity alias (e.g., 'work', 'personal'): ")
+	fmt.Println(ui.HeaderStyle.Render("🔐 Add New Identity"))
+	fmt.Println(ui.SectionDivider())
+	fmt.Println()
+
+	fmt.Print(ui.InfoText.Render("📝 Identity alias") + " (e.g., 'work', 'personal'): ")
 	alias, _ := reader.ReadString('\n')
 	alias = strings.TrimSpace(alias)
 	if alias == "" {
 		return fmt.Errorf("alias cannot be empty")
 	}
 
-	fmt.Print("Name: ")
+	fmt.Print(ui.InfoText.Render("👤 Name") + ": ")
 	name, _ := reader.ReadString('\n')
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return fmt.Errorf("name cannot be empty")
 	}
 
-	fmt.Print("Email: ")
+	fmt.Print(ui.InfoText.Render("📧 Email") + ": ")
 	email, _ := reader.ReadString('\n')
 	email = strings.TrimSpace(email)
 	if email == "" {
 		return fmt.Errorf("email cannot be empty")
 	}
 
-	fmt.Print("GitHub username: ")
+	fmt.Print(ui.InfoText.Render("🐙 GitHub username") + ": ")
 	githubUser, _ := reader.ReadString('\n')
 	githubUser = strings.TrimSpace(githubUser)
 	if githubUser == "" {
@@ -65,7 +69,7 @@ func addIdentity() error {
 	}
 
 	// Ask for auth method
-	fmt.Print("Auth method (ssh/pat) [ssh]: ")
+	fmt.Print(ui.InfoText.Render("🔐 Auth method") + " (ssh/pat) [ssh]: ")
 	authMethod, _ := reader.ReadString('\n')
 	authMethod = strings.TrimSpace(authMethod)
 	if authMethod == "" {
@@ -105,19 +109,27 @@ func addIdentity() error {
 				fmt.Printf("✓ SSH config backed up to: %s\n", backupPath)
 			}
 
-			keyPath, err := ssh.GenerateSSHKey(alias)
-			if err != nil {
+			// Generate SSH key with spinner
+			var keyPath string
+			if err := ui.SpinnerWithFunc("Generating SSH key", func() error {
+				var err error
+				keyPath, err = ssh.GenerateSSHKey(alias)
+				return err
+			}); err != nil {
 				return fmt.Errorf("failed to generate SSH key: %w", err)
 			}
 			identity.SSHKeyPath = keyPath
 			identity.SSHHostAlias = fmt.Sprintf("github.com-%s", alias)
 
-			// Add SSH config entry
-			if err := ssh.AddSSHConfigEntry(identity.SSHHostAlias, keyPath); err != nil {
+			// Add SSH config entry with spinner
+			if err := ui.SpinnerWithFunc("Updating SSH config", func() error {
+				return ssh.AddSSHConfigEntry(identity.SSHHostAlias, keyPath)
+			}); err != nil {
 				return fmt.Errorf("failed to add SSH config: %w", err)
 			}
-			fmt.Printf("✓ SSH key generated: %s\n", keyPath)
-			fmt.Printf("✓ SSH config updated\n")
+			
+			fmt.Println(ui.SuccessText.Render("✓ SSH key generated: " + keyPath))
+			fmt.Println(ui.SuccessText.Render("✓ SSH config updated"))
 
 			// Show public key and instructions
 			showSSHKeyInstructions(alias, keyPath)
