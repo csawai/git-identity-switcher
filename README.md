@@ -50,6 +50,8 @@ go install github.com/csawai/git-identity-switcher@latest
 alias gitx='git-identity-switcher'
 ```
 
+**Upgrading:** Run the same `go install` command again to get the latest version.
+
 ### Using Homebrew (macOS)
 
 ```bash
