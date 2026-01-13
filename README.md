@@ -1,4 +1,4 @@
-# gitx 🚀
+# git-identity-switcher 🚀
 
 > **Stop committing as the wrong person.**
 
