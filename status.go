@@ -30,17 +30,26 @@ func showStatus() error {
 		return fmt.Errorf("not a git repository")
 	}
 
-	// Get user.name
-	name, err := getGitConfig("user.name")
+	// Get user.name (check local first, then global)
+	name, err := getGitConfigLocal("user.name")
 	if err != nil {
-		name = "(not set)"
+		name, _ = getGitConfig("user.name")
+		if name == "" {
+			name = "(not set)"
+		}
 	}
 
-	// Get user.email
-	email, err := getGitConfig("user.email")
+	// Get user.email (check local first, then global)
+	email, err := getGitConfigLocal("user.email")
 	if err != nil {
-		email = "(not set)"
+		email, _ = getGitConfig("user.email")
+		if email == "" {
+			email = "(not set)"
+		}
 	}
+	
+	// Track if email is from local config (for binding detection)
+	emailIsLocal := err == nil
 
 	// Get remote URL
 	remote, err := getRemoteURL()
@@ -68,18 +77,14 @@ func showStatus() error {
 	// If not detected via SSH alias, check if email matches a stored identity
 	// BUT only if the email is actually set in local config (not inherited from global)
 	// This ensures we only show "bound" if gitx actually set it
-	if boundIdentity == "" && email != "(not set)" {
-		// Check if email is set in local config (not global)
-		localEmail, err := exec.Command("git", "config", "--local", "--get", "user.email").Output()
-		if err == nil && strings.TrimSpace(string(localEmail)) == email {
-			// Email is set locally, check if it matches an identity
-			cfg, err := config.LoadConfig()
-			if err == nil {
-				for _, id := range cfg.Identities {
-					if id.Email == email {
-						boundIdentity = id.Alias
-						break
-					}
+	if boundIdentity == "" && email != "(not set)" && emailIsLocal {
+		// Email is set locally, check if it matches an identity
+		cfg, err := config.LoadConfig()
+		if err == nil {
+			for _, id := range cfg.Identities {
+				if id.Email == email {
+					boundIdentity = id.Alias
+					break
 				}
 			}
 		}
@@ -125,6 +130,15 @@ func isGitRepo() bool {
 
 func getGitConfig(key string) (string, error) {
 	cmd := exec.Command("git", "config", "--get", key)
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+func getGitConfigLocal(key string) (string, error) {
+	cmd := exec.Command("git", "config", "--local", "--get", key)
 	output, err := cmd.Output()
 	if err != nil {
 		return "", err
