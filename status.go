@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/csawai/git-identity-switcher/internal/config"
+	"github.com/csawai/git-identity-switcher/internal/ui"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
 
@@ -77,17 +79,36 @@ func showStatus() error {
 		}
 	}
 
-	fmt.Println("Repository Identity Status:")
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Printf("Name:  %s\n", name)
-	fmt.Printf("Email: %s\n", email)
-	fmt.Printf("Remote: %s\n", remote)
+	// Build status display
+	var statusIcon string
+	var statusText string
+	var boxStyle lipgloss.Style
+
 	if boundIdentity != "" {
-		fmt.Printf("Bound to: %s\n", boundIdentity)
+		statusIcon = ui.StatusBound
+		statusText = fmt.Sprintf("Bound to: %s", boundIdentity)
+		boxStyle = ui.SuccessBox
 	} else {
-		fmt.Println("Bound to: (not bound)")
+		statusIcon = ui.StatusUnbound
+		statusText = "Not bound to any identity"
+		boxStyle = ui.WarningBox
 	}
 
+	content := fmt.Sprintf(`%s Repository Identity Status
+
+📝 Name:    %s
+📧 Email:   %s
+🔗 Remote:  %s
+%s %s`,
+		statusIcon,
+		ui.InfoText.Render(name),
+		ui.InfoText.Render(email),
+		ui.MutedText.Render(remote),
+		statusIcon,
+		statusText,
+	)
+
+	fmt.Println(boxStyle.Render(content))
 	return nil
 }
 

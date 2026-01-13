@@ -9,6 +9,7 @@ import (
 	"github.com/csawai/git-identity-switcher/internal/config"
 	"github.com/csawai/git-identity-switcher/internal/keychain"
 	"github.com/csawai/git-identity-switcher/internal/ssh"
+	"github.com/csawai/git-identity-switcher/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -152,6 +153,7 @@ func removeIdentity(alias string) error {
 		return fmt.Errorf("failed to remove from config: %w", err)
 	}
 
-	fmt.Printf("\n%s✓ Identity '%s' removed successfully%s\n", colorGreen, alias, colorReset)
+	fmt.Println()
+	fmt.Println(ui.Celebration(fmt.Sprintf("Identity '%s' removed successfully", alias)))
 	return nil
 }

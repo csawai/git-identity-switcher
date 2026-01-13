@@ -8,6 +8,7 @@ import (
 
 	"github.com/csawai/git-identity-switcher/internal/config"
 	"github.com/csawai/git-identity-switcher/internal/ssh"
+	"github.com/csawai/git-identity-switcher/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -92,7 +93,7 @@ func bindIdentity(alias string) error {
 		}
 	}
 
-	fmt.Printf("✓ Repository bound to identity '%s'\n", alias)
+	fmt.Println(ui.Celebration(fmt.Sprintf("Repository bound to identity '%s'", alias)))
 	return nil
 }
 

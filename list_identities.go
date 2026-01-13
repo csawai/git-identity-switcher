@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/csawai/git-identity-switcher/internal/config"
+	"github.com/csawai/git-identity-switcher/internal/ui"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
 
@@ -27,24 +30,38 @@ func listIdentities() error {
 	}
 
 	if len(cfg.Identities) == 0 {
-		fmt.Println("No identities configured.")
+		fmt.Println(ui.WarningBox.Render("⚠️  No identities configured.\n\nUse 'gitx add identity' to add your first identity."))
 		return nil
 	}
 
-	fmt.Println("Configured Identities:")
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	// Build table
+	var rows []string
+	header := ui.TableHeaderStyle.Render("Alias") + " │ " +
+		ui.TableHeaderStyle.Render("Name") + " │ " +
+		ui.TableHeaderStyle.Render("Email") + " │ " +
+		ui.TableHeaderStyle.Render("Auth") + " │ " +
+		ui.TableHeaderStyle.Render("Status")
+	
+	divider := strings.Repeat("─", lipgloss.Width(header))
+	rows = append(rows, header)
+	rows = append(rows, divider)
+
 	for _, id := range cfg.Identities {
-		fmt.Printf("Alias:      %s\n", id.Alias)
-		fmt.Printf("Name:       %s\n", id.Name)
-		fmt.Printf("Email:      %s\n", id.Email)
-		fmt.Printf("GitHub:     %s\n", id.GitHubUser)
-		fmt.Printf("Auth:       %s\n", id.AuthMethod)
-		if id.SSHKeyPath != "" {
-			fmt.Printf("SSH Key:    %s\n", id.SSHKeyPath)
-		}
-		fmt.Println()
+		authIcon := ui.GetAuthIcon(id.AuthMethod)
+		row := ui.TableRowStyle.Render("🔹 "+id.Alias) + " │ " +
+			ui.TableRowStyle.Render(id.Name) + " │ " +
+			ui.TableRowStyle.Render(id.Email) + " │ " +
+			ui.TableRowStyle.Render(authIcon+" "+strings.ToUpper(id.AuthMethod)) + " │ " +
+			ui.TableRowStyle.Render(ui.StatusBound)
+		rows = append(rows, row)
 	}
 
+	content := strings.Join(rows, "\n")
+	box := ui.BoxStyle.Copy().
+		Width(lipgloss.Width(header) + 4).
+		Render("🔐 Configured Identities\n\n" + content)
+
+	fmt.Println(box)
 	return nil
 }
 

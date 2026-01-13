@@ -11,6 +11,7 @@ import (
 	"github.com/csawai/git-identity-switcher/internal/config"
 	"github.com/csawai/git-identity-switcher/internal/keychain"
 	"github.com/csawai/git-identity-switcher/internal/ssh"
+	"github.com/csawai/git-identity-switcher/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -140,7 +141,8 @@ func addIdentity() error {
 		return err
 	}
 
-	fmt.Printf("\n%s✓ Identity '%s' added successfully%s\n", colorGreen, alias, colorReset)
+	fmt.Println()
+	fmt.Println(ui.Celebration(fmt.Sprintf("Identity '%s' added successfully", alias)))
 	
 	// Remind user about SSH key if they use SSH
 	if identity.AuthMethod == "ssh" && identity.SSHKeyPath != "" {

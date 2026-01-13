@@ -4,8 +4,15 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/csawai/git-identity-switcher/internal/ui"
 	"github.com/spf13/cobra"
 )
+
+func showBanner() {
+	fmt.Println(ui.Banner())
+	fmt.Println(ui.Subtitle("Git Identity Switcher - Never push to the wrong account again"))
+	fmt.Println()
+}
 
 var version = "0.1.0"
 
@@ -14,13 +21,19 @@ var rootCmd = &cobra.Command{
 	Short: "Git Identity Switcher - Manage multiple GitHub identities safely",
 	Long: `gitx is a CLI tool for managing multiple GitHub identities with per-repo binding.
 It helps developers safely switch between work, personal, and client accounts.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		// Show banner and help if no command provided
+		showBanner()
+		cmd.Help()
+	},
 }
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show gitx version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("gitx version %s\n", version)
+		showBanner()
+		fmt.Println(ui.InfoBox.Render(fmt.Sprintf("Version: %s", version)))
 	},
 }
 
