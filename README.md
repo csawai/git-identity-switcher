@@ -60,7 +60,7 @@ Working with multiple GitHub accounts (work, personal, client) is a pain. You've
 
 [![git-identity-switcher Demo](https://img.youtube.com/vi/pKojQpKPEUw/maxresdefault.jpg)](https://youtu.be/pKojQpKPEUw)
 
-Watch the [10-second demo](https://youtu.be/pKojQpKPEUw) to see git-identity-switcher in action.
+Watch the [ demo](https://youtu.be/pKojQpKPEUw) to see git-identity-switcher in action.
 
 ## 📋 What git-identity-switcher Does (and Doesn't)
 
